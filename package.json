@@ -1,0 +1,58 @@
+{
+  "name": "apiwhite",
+  "version": "1.0.0",
+  "description": "API base para CRUD y autenticación JWT, reutilizable como un framework para futuros proyectos.",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "lint": "eslint src/**/*.js",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tu-usuario/apiwhite.git"
+  },
+  "keywords": [
+    "api",
+    "nodejs",
+    "express",
+    "jwt",
+    "crud",
+    "reusable"
+  ],
+  "author": "Tu Nombre <tuemail@example.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tu-usuario/apiwhite/issues"
+  },
+  "homepage": "https://github.com/tu-usuario/apiwhite#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "chalk": "^5.4.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-async-handler": "^1.2.0",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.0.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.10.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.8.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "web-push": "^3.6.7",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.20.0",
+    "jest": "^29.0.1",
+    "nodemon": "^3.1.9"
+  }
+}
