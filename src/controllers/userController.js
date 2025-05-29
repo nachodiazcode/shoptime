@@ -1,120 +1,149 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import path from 'path'
+import asyncHandler from 'express-async-handler';
+import logger from './../utils/logger.js';  // Ajusta la ruta según la ubicación real de tu archivo logger
 
 // Función auxiliar para generar un token JWT
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '1d' // Configura según las necesidades de tu aplicación
+        expiresIn: '1d'
     });
 };
 
 // Controlador para registrar un nuevo usuario
-export const register = async (req, res) => {
-    const { username, email, password, tipo } = req.body;
+export const register = asyncHandler(async (req, res) => {
+    const { username, email, password, roles, profile, address, paymentMethods } = req.body;
 
-    if (!username || !email || !password || !tipo) {
-        return res.status(400).json({ message: 'Todos los campos son obligatorios' });
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+        logger.error('Intento de registro con un email que ya existe: ' + email);
+        return res.status(400).json({ message: 'El usuario ya existe' });
     }
 
-    try {
-        // Verificar si el usuario ya existe
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = new User({
+        username,
+        email,
+        password: hashedPassword,
+        roles,
+        profile,
+        address,
+        paymentMethods
+    });
+
+    await user.save();
+    logger.info('Usuario registrado: ' + username);
+    res.status(201).json({
+        message: 'Usuario registrado exitosamente',
+        user: {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            roles: user.roles,
+            profile: user.profile,
+            address: user.address,
+            paymentMethods: user.paymentMethods,
+            token: generateToken(user._id)
+        }
+    });
+});
+
+// Controlador para actualizar un usuario
+export const updateUser = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { username, email, password, roles, profile, address } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) {
+        logger.warn('Usuario no encontrado: ' + id);
+        return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    user.username = username || user.username;
+    user.email = email || user.email;
+    user.roles = roles || user.roles;
+    user.profile = profile || user.profile;
+    user.address = address || user.address;
+
+    if (password) {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+    }
+
+    await user.save();
+    logger.info('Usuario actualizado: ' + username);
+    res.json({
+        message: 'Usuario actualizado exitosamente',
+        user: {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+            roles: user.roles,
+            profile: user.profile,
+            address: user.address
+        }
+    });
+});
+
+// Controlador para obtener todos los usuarios
+export const getUsers = asyncHandler(async (req, res) => {
+    const users = await User.find({});
+    logger.info('Consulta de todos los usuarios realizada.');
+    res.json(users.map(user => ({
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        roles: user.roles,
+        profile: user.profile,
+        address: user.address
+    })));
+});
+
+// Controlador para crear múltiples usuarios
+export const createMultipleUsers = asyncHandler(async (req, res) => {
+    const users = req.body.users;
+    const creationResults = [];
+
+    for (const userData of users) {
+        const { username, email, password, roles, profile, address, paymentMethods } = userData;
         const userExists = await User.findOne({ email });
         if (userExists) {
-            return res.status(400).json({ message: 'El usuario ya existe' });
+            logger.warn('Registro fallido por email existente: ' + email);
+            creationResults.push({ email, message: 'Usuario ya existe' });
+            continue;
         }
 
-        // Hash de la contraseña
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Crear nuevo usuario
-        const user = new User({
+        const newUser = new User({
             username,
             email,
             password: hashedPassword,
-            tipo  // Asegúrate de que este campo está siendo incluido
+            roles,
+            profile,
+            address,
+            paymentMethods
         });
-
-        const savedUser = await user.save();
-
-        res.status(201).json({
-            _id: savedUser._id,
-            username: savedUser.username,
-            email: savedUser.email,
-            token: generateToken(savedUser._id)
+        await newUser.save();
+        logger.info('Nuevo usuario registrado: ' + username);
+        creationResults.push({
+            _id: newUser._id,
+            username: newUser.username,
+            email: newUser.email,
+            roles: newUser.roles,
+            profile: newUser.profile,
+            address: newUser.address,
+            paymentMethods: newUser.paymentMethods.map(pm => ({
+                cardType: pm.cardType,
+                cardNumber: '**** **** **** ' + pm.cardNumber.slice(-4),
+                cardName: pm.cardName,
+                cardExpiration: pm.cardExpiration
+            }))
         });
-    } catch (error) {
-        console.error('Error en el registro:', error);
-        res.status(500).json({ message: 'Error al registrar el usuario: ' + error.message });
-    }
-};
-
-
-
-// Controlador para iniciar sesión
-export const login = async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const user = await User.findOne({ email }).select('+password');
-        if (user && await bcrypt.compare(password, user.password)) {
-            res.json({
-                _id: user._id,
-                username: user.username,
-                email: user.email,
-                token: generateToken(user._id)
-            });
-        } else {
-            res.status(401).json({ message: 'Credenciales inválidas' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: 'Error al iniciar sesión: ' + error.message });
-    }
-};
-
-// Controlador para obtener todos los usuarios
-export const getUsers = async (req, res) => {
-    try {
-        const users = await User.find({});
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ message: 'Error al obtener los usuarios: ' + error.message });
-    }
-};
-
-
-export const createMultipleUsers = async (req, res) => {
-    const users = req.body.users; // Asume que `users` es un array de objetos usuario
-    const creationResults = [];
-    
-    for (const userData of users) {
-        const { username, email, password } = userData;
-        try {
-            // Verificar si el usuario ya existe
-            const userExists = await User.findOne({ email });
-            if (userExists) {
-                creationResults.push({ email, message: 'Usuario ya existe' });
-                continue; // Salta a la siguiente iteración del bucle
-            }
-
-            // Hash de la contraseña
-            const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash(password, salt);
-
-            // Crear nuevo usuario
-            const newUser = new User({
-                username,
-                email,
-                password: hashedPassword
-            });
-
-            const savedUser = await newUser.save();
-            creationResults.push({ email: savedUser.email, message: 'Usuario creado exitosamente' });
-        } catch (error) {
-            creationResults.push({ email, message: 'Error al crear usuario: ' + error.message });
-        }
     }
 
     res.status(201).json(creationResults);
-};
+});

@@ -1,7 +1,7 @@
 {
-  "name": "apiwhite",
+  "name": "shoptime",
   "version": "1.0.0",
-  "description": "API base para CRUD y autenticación JWT, reutilizable como un framework para futuros proyectos.",
+  "description": "Carrito de compras",
   "main": "src/server.js",
   "type": "module",
   "scripts": {
@@ -31,6 +31,7 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "chalk": "^5.4.1",
+    "colors": "^1.4.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
