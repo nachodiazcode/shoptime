@@ -1,5 +1,5 @@
 {
-  "name": "shoptime",
+  "name": "shoptime-api",
   "version": "1.0.0",
   "description": "Carrito de compras",
   "main": "src/server.js",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tu-usuario/apiwhite.git"
+    "url": "https://github.com/nachodiazcode/shoptime.git"
   },
   "keywords": [
     "api",
@@ -20,14 +20,16 @@
     "express",
     "jwt",
     "crud",
-    "reusable"
+    "reusable",
+    "carrito",
+    "ecommerce"
   ],
-  "author": "Tu Nombre <tuemail@example.com>",
+  "author": "Ignacio Díaz <ignaciosergiodiaz@gmail.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/tu-usuario/apiwhite/issues"
+    "url": "https://github.com/nachodiazcode/shoptime/issues"
   },
-  "homepage": "https://github.com/tu-usuario/apiwhite#readme",
+  "homepage": "https://github.com/nachodiazcode/shoptime#readme",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "chalk": "^5.4.1",
